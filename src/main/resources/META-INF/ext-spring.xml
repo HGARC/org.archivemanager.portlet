@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+http://www.springframework.org/schema/context
+http://www.springframework.org/schema/context/spring-context-3.0.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+	
+	<!-- Node Service -->	
+	<bean id="nodeService" class="org.heed.openapps.portal.service.LiferayNodeService">
+		<property name="beanLocator" value="archivemanager-data-portlet" />
+	</bean>
+	
+	<bean id="dictionaryService" class="org.heed.openapps.dictionary.service.DataDictionaryServiceImpl" init-method="initialize">
+		<property name="entityService" ref="entityService" />
+		<property name="propertyService" ref="propertyService" />
+		<property name="systemImports">
+			<list>
+				<value>resources/dictionaries/dictionary.xml</value>
+				<value>resources/dictionaries/crawling.xml</value>
+			</list>
+		</property>
+	</bean>
+	
+	<!-- Bootstrap 
+	<bean id="qnameConversion" class="org.heed.openapps.entity.service.data.QNameConversionService" init-method="initialize">
+		<property name="nodeService" ref="nodeService" />
+		<property name="cleanup" value="true" />
+	</bean>
+	-->
+	<!-- Search Service -->
+	<bean id="defaultNodeIndexer" class="org.heed.openapps.search.service.indexing.DefaultEntityIndexer">
+		<property name="entityService" ref="entityService" />
+		<property name="dictionaryService" ref="dictionaryService" />
+	</bean>
+	<bean id="repositoryEntityIndexer" class="org.archivemanager.data.indexer.RepositoryEntityIndexer">
+		<property name="entityService" ref="entityService" />
+		<property name="dictionaryService" ref="dictionaryService" />
+	</bean>
+	<bean id="notableFigureEntryIndexer" class="org.archivemanager.data.indexer.NotableFigureEntryIndexer">
+		<property name="dictionaryService" ref="dictionaryService" />
+	</bean>
+	<bean id="indexingService" class="org.heed.openapps.search.service.indexing.zoie.ZoieIndexingService" init-method="start" destroy-method="shutdown">
+		<property name="dictionaryService" ref="dictionaryService" />
+		<property name="propertyService" ref="propertyService" />
+		<property name="homeDirectory" value="/data/lucene/default" />
+		<property name="batchSize" value="100000" />
+		<property name="batchDelay" value="60000" />
+		<property name="queue">
+			<bean class="org.heed.openapps.search.service.indexing.zoie.IndexingWorkQueue">
+				<property name="indexingService" ref="indexingService" />
+				<property name="silent" value="false" />
+				<property name="threadCount" value="5" />
+			</bean>
+		</property>
+		<property name="indexers">
+			<map>
+				<entry key="default" value-ref="defaultNodeIndexer" />
+				<entry key="openapps_org_classification_1_0_entry" value-ref="notableFigureEntryIndexer" />
+				<!-- 
+				<entry key="openapps_org_classification_1_0_corporation" value-ref="repositoryEntityIndexer" />
+				<entry key="openapps_org_classification_1_0_person" value-ref="repositoryEntityIndexer" />
+				<entry key="openapps_org_classification_1_0_subject" value-ref="repositoryEntityIndexer" />				
+				<entry key="openapps_org_repository_1_0_accession" value-ref="repositoryEntityIndexer" />
+				<entry key="openapps_org_repository_1_0_location" value-ref="repositoryEntityIndexer" />
+				-->
+				<entry key="openapps_org_repository_1_0_collection" value-ref="repositoryEntityIndexer" />				
+				<entry key="openapps_org_repository_1_0_item" value-ref="repositoryEntityIndexer" />
+				<entry key="openapps_org_repository_1_0_printed_material" value-ref="repositoryEntityIndexer" />
+				<entry key="openapps_org_repository_1_0_audio" value-ref="repositoryEntityIndexer" />
+				<entry key="openapps_org_repository_1_0_financial" value-ref="repositoryEntityIndexer" />
+				<entry key="openapps_org_repository_1_0_journals" value-ref="repositoryEntityIndexer" />
+				<entry key="openapps_org_repository_1_0_legal" value-ref="repositoryEntityIndexer" />
+				<entry key="openapps_org_repository_1_0_medical" value-ref="repositoryEntityIndexer" />
+				<entry key="openapps_org_repository_1_0_memorabilia" value-ref="repositoryEntityIndexer" />
+				<entry key="openapps_org_repository_1_0_miscellaneous" value-ref="repositoryEntityIndexer" />
+				<entry key="openapps_org_repository_1_0_notebooks" value-ref="repositoryEntityIndexer" />
+				<entry key="openapps_org_repository_1_0_photographs" value-ref="repositoryEntityIndexer" />
+				<entry key="openapps_org_repository_1_0_research" value-ref="repositoryEntityIndexer" />
+				<entry key="openapps_org_repository_1_0_video" value-ref="repositoryEntityIndexer" />
+				<entry key="openapps_org_repository_1_0_scrapbooks" value-ref="repositoryEntityIndexer" />
+				<entry key="openapps_org_repository_1_0_professional" value-ref="repositoryEntityIndexer" />
+				<entry key="openapps_org_repository_1_0_manuscript" value-ref="repositoryEntityIndexer" />
+				<entry key="openapps_org_repository_1_0_correspondence" value-ref="repositoryEntityIndexer" />
+				<entry key="openapps_org_repository_1_0_artwork" value-ref="repositoryEntityIndexer" />
+			</map>
+		</property>
+	</bean>	
+	<bean id="defaultEntitySearcher" class="org.heed.openapps.entity.service.search.DefaultEntitySearcher">
+		<property name="nodeService" ref="nodeService" />
+		<property name="entityService" ref="entityService" />
+		<property name="loggingOn" value="true" />
+	</bean>
+	<bean id="archiveManagerDictionary" class="org.archivemanager.search.ArchiveManagerDictionary">
+		<property name="plugins">
+			<list>				
+				<bean class="org.heed.openapps.search.service.plugins.QNameDictionaryPlugin">
+					<property name="entity" value="openapps_org_repository_1_0_item" />
+					<property name="dictionaryService" ref="dictionaryService" />
+				</bean>
+				<bean class="org.heed.openapps.search.service.plugins.SubjectDictionaryPlugin">
+					<property name="entityService" ref="entityService" />
+				</bean>
+			</list>
+		</property>
+	</bean>
+	<bean id="archiveManagerTokenizer" class="org.heed.openapps.search.service.BaseTokenizer" init-method="initialize">
+		<property name="dictionary" ref="archiveManagerDictionary" />
+	</bean>
+	<bean id="archiveManagerParser" class="org.heed.openapps.search.service.LuceneQueryParser" init-method="initialize">
+		<property name="defaultFields" value="freetext" />
+		<property name="tokenizer" ref="archiveManagerTokenizer" />
+		<property name="dictionary" ref="archiveManagerDictionary" />
+	</bean>
+	<bean id="archiveManagerSearcher" class="org.heed.openapps.search.service.RepositorySearcher" init-method="initialize">
+		<property name="parser" ref="archiveManagerParser" />
+		<property name="entityService" ref="entityService" />
+		<property name="indexingService" ref="indexingService" />
+		<property name="plugins">
+			<list>
+				<bean class="org.heed.openapps.search.service.navigation.DefaultBreadcrumbProvider" init-method="initialize">
+					<property name="tokenizer" ref="archiveManagerTokenizer" />
+					<property name="entityService" ref="entityService" />
+					<property name="searchService" ref="searchService" />
+				</bean>
+				<bean class="org.archivemanager.search.CollectionSearchProvider" init-method="initialize">
+					<property name="entityService" ref="entityService" />
+				</bean>
+				<bean class="org.archivemanager.search.ItemSearchProvider" init-method="initialize">
+					<property name="entityService" ref="entityService" />
+					<property name="searchService" ref="searchService" />
+				</bean>
+				<bean class="org.archivemanager.search.ArchiveSearchPlugin" init-method="initialize" />
+				<bean class="org.archivemanager.search.NotableFigureEntrySearchPlugin" init-method="initialize" />
+			</list>
+		</property>
+	</bean>
+	<bean id="searchService" class="org.heed.openapps.search.service.SearchServiceImpl" init-method="initialize" destroy-method="shutdown">
+		<property name="indexingService" ref="indexingService" />
+		<property name="searchers">
+			<map>
+				<entry key="default" value-ref="archiveManagerSearcher" />				
+			</map>
+		</property>	
+	</bean>	
+	
+	<!-- Entity Service -->
+	<bean id="defaultEntityExporter" class="org.heed.openapps.entity.service.DefaultExportProcessor">
+		<property name="entityService" ref="entityService" />
+		<property name="dictionaryService" ref="dictionaryService" />
+	</bean>
+	<bean id="accessionExporter" class="org.archivemanager.data.AccessionExportProcessor" />
+	<bean id="collectionContentExportProcessor" class="org.archivemanager.data.CollectionContentExportProcessor">
+		<property name="entityService" ref="entityService" />
+		<property name="dictionaryService" ref="dictionaryService" />
+	</bean>
+	<bean id="digitalObjectExporter" class="org.heed.openapps.portal.data.DigitalObjectExportProcessor">
+		<property name="entityService" ref="entityService" />
+		<property name="dictionaryService" ref="dictionaryService" />
+		<property name="digitalObjectService" ref="digitalObjectService" />
+	</bean>
+	<bean id="permissionExporter" class="org.heed.openapps.entity.service.data.PermissionExportProcessor">
+		<property name="entityService" ref="entityService" />
+		<property name="dictionaryService" ref="dictionaryService" />
+	</bean>
+	<!-- 
+	<bean id="filemakerXmlImporter" class="org.archivemanager.data.FilemakerXMLAccessionImportProcessor">
+		<property name="name" value="Accession Filemaker Importer" />		
+	</bean>
+	<bean id="excelLocationImporter" class="org.archivemanager.data.ExcelLocationImportProcessor">
+		<property name="name" value="Excel Location Importer" />
+		<property name="entityService" ref="entityService" />
+	</bean>
+	<bean id="excelClassificationImporter" class="org.archivemanager.data.ExcelClassificationEntryImportProcessor">
+		<property name="name" value="Excel Classification Entry" />
+		<property name="searchService" ref="searchService" />
+	</bean>
+	<bean id="xmlContactImporter" class="org.archivemanager.data.XMLContactImportProcessor">
+		<property name="name" value="XML Contact Importer" />
+		<property name="entityService" ref="entityService" />
+	</bean>
+	-->
+	<bean id="defaultTextCollectionImporter" class="org.archivemanager.data.DefaultTextCollectionImportProcessor">
+		<property name="name" value="Default Text" />
+		<property name="entityService" ref="entityService" />
+	</bean>
+	<bean id="OAXMLCollectionImporter" class="org.archivemanager.data.OAXMLCollectionImportProcessor">
+		<property name="name" value="OpenApps XML" />
+		<property name="entityService" ref="entityService" />
+		<property name="dictionaryService" ref="dictionaryService" />
+	</bean>
+	<bean id="defaultPersistenceListener" class="org.heed.openapps.search.service.data.SearchEntityPersistenceListener">
+		<property name="nodeService" ref="nodeService" />
+		<property name="dictionaryService" ref="dictionaryService" />
+		<property name="entityService" ref="entityService" />
+		<property name="securityService" ref="securityService" />
+		<property name="searchService" ref="searchService" />
+		<property name="schedulingService" ref="schedulingService" />
+		<property name="hash" value="SHA-1" />
+	</bean>
+	<bean id="collectionPersistenceListener" class="org.archivemanager.data.CollectionPersistenceListener">
+		<property name="nodeService" ref="nodeService" />
+		<property name="dictionaryService" ref="dictionaryService" />
+		<property name="entityService" ref="entityService" />
+		<property name="searchService" ref="searchService" />
+		<property name="securityService" ref="securityService" />
+		<property name="schedulingService" ref="schedulingService" />
+	</bean>
+	<bean id="documentPersistenceListener" class="org.archivemanager.data.DocumentPersistenceListener">
+		<property name="nodeService" ref="nodeService" />
+		<property name="dictionaryService" ref="dictionaryService" />
+		<property name="entityService" ref="entityService" />
+		<property name="searchService" ref="searchService" />
+		<property name="securityService" ref="securityService" />
+		<property name="schedulingService" ref="schedulingService" />
+	</bean>
+	<!-- 
+	<bean id="contactPersistenceListener" class="org.archivemanager.data.ContactPersistenceListener">
+		<property name="dictionaryService" ref="dictionaryService" />
+		<property name="entityService" ref="entityService" />
+	</bean>
+	-->
+	<bean id="entityService" class="org.heed.openapps.entity.service.NodeEntityService" init-method="initialize">
+		<property name="nodeService" ref="nodeService" />
+		<property name="dictionaryService" ref="dictionaryService" />
+		<property name="schedulingService" ref="schedulingService" />
+		<property name="cacheService" ref="cacheService" />
+		<!-- property name="hash" value="SHA-1" /-->		
+		<!-- 
+		<property name="indexingQueue">
+			<bean class="org.heed.openapps.entity.service.IndexingWorkQueue">
+				<property name="nodeService" ref="nodeService" />
+				<property name="silent" value="false" />
+				<property name="threadCount" value="5" />
+			</bean>
+		</property>
+		-->
+		<property name="exporters">
+			<map>
+				<entry key="default" value-ref="defaultEntityExporter" />
+				<entry key="openapps_org_system_1_0_permission" value-ref="permissionExporter" />
+				<entry key="openapps_org_content_1_0_file" value-ref="digitalObjectExporter" />
+				<entry key="openapps_org_contact_1_0_address" value-ref="accessionExporter" />
+				<entry key="openapps_org_repository_1_0_collection" value-ref="collectionContentExportProcessor" />
+				<entry key="openapps_org_repository_1_0_item" value-ref="collectionContentExportProcessor" />
+				<entry key="openapps_org_repository_1_0_printed_material" value-ref="collectionContentExportProcessor" />
+				<entry key="openapps_org_repository_1_0_artwork" value-ref="collectionContentExportProcessor" />
+				<entry key="openapps_org_repository_1_0_audio" value-ref="collectionContentExportProcessor" />
+				<entry key="openapps_org_repository_1_0_financial" value-ref="collectionContentExportProcessor" />
+				<entry key="openapps_org_repository_1_0_journals" value-ref="collectionContentExportProcessor" />
+				<entry key="openapps_org_repository_1_0_legal" value-ref="collectionContentExportProcessor" />
+				<entry key="openapps_org_repository_1_0_medical" value-ref="collectionContentExportProcessor" />
+				<entry key="openapps_org_repository_1_0_memorabilia" value-ref="collectionContentExportProcessor" />
+				<entry key="openapps_org_repository_1_0_miscellaneous" value-ref="collectionContentExportProcessor" />
+				<entry key="openapps_org_repository_1_0_notebooks" value-ref="collectionContentExportProcessor" />
+				<entry key="openapps_org_repository_1_0_photographs" value-ref="collectionContentExportProcessor" />
+				<entry key="openapps_org_repository_1_0_research" value-ref="collectionContentExportProcessor" />
+				<entry key="openapps_org_repository_1_0_video" value-ref="collectionContentExportProcessor" />
+				<entry key="openapps_org_repository_1_0_scrapbooks" value-ref="collectionContentExportProcessor" />
+				<entry key="openapps_org_repository_1_0_professional" value-ref="collectionContentExportProcessor" />
+				<entry key="openapps_org_repository_1_0_manuscript" value-ref="collectionContentExportProcessor" />
+				<entry key="openapps_org_repository_1_0_correspondence" value-ref="collectionContentExportProcessor" />
+			</map>
+		</property>
+		<property name="importers">
+			<map>
+				<!-- 
+				<entry key="openapps_org_repository_1_0_accession" value-ref="filemakerXmlImporter" />
+				<entry key="openapps_org_repository_1_0_location" value-ref="excelLocationImporter" />
+				-->
+				<entry key="openapps_org_repository_1_0_collection_0" value-ref="defaultTextCollectionImporter" />				
+				<entry key="openapps_org_repository_1_0_collection_1" value-ref="OAXMLCollectionImporter" />
+				<!-- 
+				<entry key="openapps_org_classification_1_0_entry" value-ref="excelClassificationImporter" />
+				<entry key="openapps_org_contact_1_0_contact" value-ref="xmlContactImporter" />
+				-->
+			</map>
+		</property>
+		<property name="persistenceListeners">
+			<map>
+				<entry key="default" value-ref="defaultPersistenceListener" />
+				<entry key="openapps_org_crawling_1_0_document" value-ref="documentPersistenceListener" />
+				<entry key="openapps_org_repository_1_0_collection" value-ref="collectionPersistenceListener" />
+				<entry key="openapps_org_repository_1_0_item" value-ref="collectionPersistenceListener" />
+				<entry key="openapps_org_repository_1_0_printed_material" value-ref="collectionPersistenceListener" />
+				<entry key="openapps_org_repository_1_0_artwork" value-ref="collectionPersistenceListener" />
+				<entry key="openapps_org_repository_1_0_audio" value-ref="collectionPersistenceListener" />
+				<entry key="openapps_org_repository_1_0_financial" value-ref="collectionPersistenceListener" />
+				<entry key="openapps_org_repository_1_0_journals" value-ref="collectionPersistenceListener" />
+				<entry key="openapps_org_repository_1_0_legal" value-ref="collectionPersistenceListener" />
+				<entry key="openapps_org_repository_1_0_medical" value-ref="collectionPersistenceListener" />
+				<entry key="openapps_org_repository_1_0_memorabilia" value-ref="collectionPersistenceListener" />
+				<entry key="openapps_org_repository_1_0_miscellaneous" value-ref="collectionPersistenceListener" />
+				<entry key="openapps_org_repository_1_0_notebooks" value-ref="collectionPersistenceListener" />
+				<entry key="openapps_org_repository_1_0_photographs" value-ref="collectionPersistenceListener" />
+				<entry key="openapps_org_repository_1_0_research" value-ref="collectionPersistenceListener" />
+				<entry key="openapps_org_repository_1_0_video" value-ref="collectionPersistenceListener" />
+				<entry key="openapps_org_repository_1_0_scrapbooks" value-ref="collectionPersistenceListener" />
+				<entry key="openapps_org_repository_1_0_professional" value-ref="collectionPersistenceListener" />
+				<entry key="openapps_org_repository_1_0_manuscript" value-ref="collectionPersistenceListener" />
+				<entry key="openapps_org_repository_1_0_correspondence" value-ref="collectionPersistenceListener" />
+			</map>
+		</property>
+		<property name="searchers">
+			<map>
+				<entry key="default" value-ref="defaultEntitySearcher" />			
+			</map>
+		</property>			
+	</bean>
+	
+	<bean id="crawlingService" class="org.heed.openapps.crawling.service.StandardCrawlingService" init-method="initialize">
+		<property name="entityService" ref="entityService" />
+		<property name="propertyService" ref="propertyService" />
+		<property name="cacheService" ref="cacheService" />
+		<property name="schedulingService" ref="schedulingService" />
+	</bean>
+	
+	<bean id="digitalObjectService" class="org.heed.openapps.portal.service.LiferayDigitalObjectService">
+		<property name="entityService" ref="entityService" />
+		<property name="repository" value="10197" />
+	</bean>
+	<bean id="reportingService" class="org.heed.openapps.reporting.jasper.JasperReportingService">
+		<property name="propertyService" ref="propertyService" />
+		<property name="schedulingService" ref="schedulingService" />
+	</bean>
+	<bean id="propertyService" class="org.heed.openapps.portal.service.LiferayPropertiesService" />
+   	
+	<bean id="cacheService" class="org.heed.openapps.portal.service.LiferayCacheService"></bean>
+		
+	<bean id="messagingService" class="org.heed.openapps.portal.service.LiferayMessagingService" />
+   	
+	<!--bean id="schedulingService" class="org.heed.openapps.portal.service.scheduling.LiferaySchedulingService" /-->
+	<bean id="schedulingService" class="org.heed.openapps.scheduling.service.OpenAppsSchedulingService">
+		<property name="threadCount" value="3" />
+	</bean>
+	
+	<bean id="securityService" class="org.heed.openapps.portal.service.LiferaySecurityService">
+		<property name="entityService" ref="entityService" />
+		<property name="cacheService" ref="cacheService" />
+	</bean>
+</beans>

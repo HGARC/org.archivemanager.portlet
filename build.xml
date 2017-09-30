@@ -1,0 +1,37 @@
+<project name="org.archivemanager.portlet" basedir="." default="deploy">
+	<property name="deploy.dirs" value="Y:/BUPortal" />
+	<property name="module.version" value="3.0.0" />
+	<property name="dist.dir" value="target" />
+	
+	<import file="../../build-common.xml"/>
+	
+	<target name="deploy" depends="mvn clean package">
+		<for list="${deploy.dirs}" param="dir">
+			<sequential>
+				<copy todir="@{dir}/deploy" file="./target/archivemanager-portlet-3.0.0.war" />
+			</sequential>
+		</for>
+	</target>
+	<target name="copy-dependencies" unless="compile.classpath" xmlns:artifact="urn:maven-artifact-ant">    
+		<condition property="maven.repo.local" value="${maven.repo.local}" else="${user.home}/.m2/repository">
+			<isset property="maven.repo.local"/>
+		</condition>           
+		<echo>maven.repo.local=${maven.repo.local}</echo>			
+		<for list="${deploy.dirs}" param="dir">
+			<sequential>
+				<copy file="${maven.repo.local}/org/heed/openapps/org.heed.openapps.core.api/3.0.0/org.heed.openapps.core.api-3.0.0.jar" todir="@{dir}/tomcat-7.0.42/lib/ext" />
+				<copy file="${maven.repo.local}/org/heed/openapps/org.heed.openapps.core.service/3.0.0/org.heed.openapps.core.service-3.0.0.jar" todir="@{dir}/tomcat-7.0.42/webapps/archivemanager-portlet/WEB-INF/lib" />
+				<copy file="${maven.repo.local}/org/heed/openapps/org.heed.openapps.search.service/3.0.0/org.heed.openapps.search.service-3.0.0.jar" todir="@{dir}/tomcat-7.0.42/webapps/archivemanager-portlet/WEB-INF/lib" />
+				<copy file="${maven.repo.local}/org/archivemanager/org.archivemanager.core.api/3.0.0/org.archivemanager.core.api-3.0.0.jar" todir="@{dir}/tomcat-7.0.42/lib/ext" />
+				<copy file="${maven.repo.local}/org/archivemanager/org.archivemanager.core.service/3.0.0/org.archivemanager.core.service-3.0.0.jar" todir="@{dir}/tomcat-7.0.42/webapps/archivemanager-portlet/WEB-INF/lib" />
+			</sequential>
+		</for>
+		<!--
+		<copy file="${maven.repo.local}/org/heed/openapps/org.heed.openapps.portal.service/1.0.0/org.heed.openapps.portal.service-1.0.0.jar" todir="src/main/webapp/WEB-INF/lib" />
+		<copy file="${maven.repo.local}/org/heed/opensearch/org.heed.opensearch.search.service/2.0.0/org.heed.opensearch.search.service-2.0.0.jar" todir="src/main/webapp/WEB-INF/lib" />
+		
+		
+		<copy file="${maven.repo.local}/org/heed/openapps/org.heed.openapps.node.neo4j/3.0.0/org.heed.openapps.node.neo4j-3.0.0.jar" todir="src/main/webapp/WEB-INF/lib" />
+		-->
+	</target>
+</project>
