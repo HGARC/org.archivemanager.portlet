@@ -193,6 +193,10 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 		<property name="entityService" ref="entityService" />
 		<property name="dictionaryService" ref="dictionaryService" />
 	</bean>
+	<bean id="excelCollectionImporter" class="org.archivemanager.data.ExcelCollectionImportProcessor">
+		<property name="name" value="Excel" />
+		<property name="entityService" ref="entityService" />
+	</bean>
 	<bean id="defaultPersistenceListener" class="org.heed.openapps.search.service.data.SearchEntityPersistenceListener">
 		<property name="nodeService" ref="nodeService" />
 		<property name="dictionaryService" ref="dictionaryService" />
@@ -274,6 +278,7 @@ http://www.springframework.org/schema/aop http://www.springframework.org/schema/
 				-->
 				<entry key="openapps_org_repository_1_0_collection_0" value-ref="defaultTextCollectionImporter" />				
 				<entry key="openapps_org_repository_1_0_collection_1" value-ref="OAXMLCollectionImporter" />
+				<entry key="openapps_org_repository_1_0_collection_2" value-ref="excelCollectionImporter" />
 				<!-- 
 				<entry key="openapps_org_classification_1_0_entry" value-ref="excelClassificationImporter" />
 				<entry key="openapps_org_contact_1_0_contact" value-ref="xmlContactImporter" />
